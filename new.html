@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="image_14fcbc.png">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <title>YouTube Modern</title>
+    <style>
+        /* 最新版はダークモードが基本 */
+        body { background: #0f0f0f; color: #fff; font-family: "Roboto", sans-serif; margin: 0; padding-top: 48px; padding-bottom: 60px; }
+        
+        /* ヘッダー：最新のフラットデザイン */
+        .header { position: fixed; top: 0; width: 100%; height: 48px; background: #0f0f0f; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; box-sizing: border-box; z-index: 1000; }
+        .logo { height: 20px; filter: brightness(1.5); }
+        .head-icons { display: flex; gap: 18px; }
+
+        /* リスト：角丸サムネイルが最新の証 */
+        .v-card { margin-bottom: 24px; }
+        .thumb-wrap { width: 100%; position: relative; padding-top: 56.25%; }
+        .thumb-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+        /* 最新風の角丸（4sでも綺麗に見えるように） */
+        .thumb-wrap { border-radius: 12px; overflow: hidden; margin: 0 12px; }
+
+        .v-info { display: flex; padding: 12px 16px; }
+        .ch-icon { width: 36px; height: 36px; border-radius: 18px; background: #333; margin-right: 12px; flex-shrink: 0; overflow: hidden; }
+        .ch-icon img { width: 100%; height: 100%; }
+        .v-text { flex: 1; }
+        .v-title { font-size: 14px; font-weight: 500; line-height: 1.4; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .v-meta { font-size: 12px; color: #aaa; margin-top: 4px; }
+
+        /* 再生ページ：浮かび上がるようなUI */
+        .full-page { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f0f0f; z-index: 2000; overflow-y: auto; }
+        .video-box { position: sticky; top: 0; background: #000; z-index: 2001; }
+        
+        /* ボタン類：グレーの丸い背景が最新 */
+        .chip-bar { display: flex; gap: 8px; padding: 8px 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .chip { background: #272727; padding: 6px 12px; border-radius: 18px; font-size: 12px; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+
+        /* 最新のチャンネル情報セクション */
+        .modern-ch-sec { display: flex; align-items: center; padding: 12px 16px; margin-top: 8px; }
+        .sub-btn-white { background: #fff; color: #000; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; border: none; margin-left: auto; }
+
+        /* ボトムナビ */
+        .nav-bar { position: fixed; bottom: 0; width: 100%; height: 50px; background: #0f0f0f; border-top: 1px solid #272727; display: flex; z-index: 3000; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; color: #fff; }
+        .nav-item i { font-size: 24px; margin-bottom: 2px; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" class="logo">
+    <div class="head-icons">
+        <i class="material-icons" style="font-size:24px;" onclick="doSearch()">search</i>
+        <i class="material-icons" style="font-size:24px;">account_circle</i>
+    </div>
+</div>
+
+<div id="main-feed"></div>
+
+<div id="player-page" class="full-page">
+    <div class="video-box" id="yt-iframe-cont"></div>
+    <div style="padding:12px 16px;">
+        <h2 id="p-title" style="font-size:18px; margin:0;"></h2>
+        <p id="p-views" style="font-size:12px; color:#aaa; margin-top:8px;"></p>
+    </div>
+
+    <div class="modern-ch-sec" id="ch-link">
+        <div class="ch-icon" id="p-ch-icon"></div>
+        <div>
+            <div id="p-ch-name" style="font-size:14px; font-weight:bold;"></div>
+            <div style="font-size:11px; color:#aaa;">105万人</div>
+        </div>
+        <button class="sub-btn-white">登録</button>
+    </div>
+
+    <div class="chip-bar">
+        <div class="chip"><i class="material-icons" style="font-size:16px;">thumb_up</i><span id="p-likes">---</span></div>
+        <div class="chip"><i class="material-icons" style="font-size:16px;">share</i>共有</div>
+        <div class="chip"><i class="material-icons" style="font-size:16px;">download</i>オフライン</div>
+    </div>
+
+    <div id="p-desc-box" style="padding:12px 16px; background:#272727; margin:12px; border-radius:12px; font-size:12px;">
+        <div id="p-description" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;"></div>
+    </div>
+
+    <div style="text-align:center; padding:20px; color:#aaa;" onclick="closePlayer()">✕ 閉じる</div>
+</div>
+
+<div class="nav-bar">
+    <div class="nav-item"><i class="material-icons">home</i>ホーム</div>
+    <div class="nav-item"><i class="material-icons">explore</i>ショート</div>
+    <div class="nav-item"><i class="material-icons">subscriptions</i>登録済み</div>
+    <div class="nav-item"><i class="material-icons">video_library</i>ライブラリ</div>
+</div>
+
+<script>
+    var KEY = 'AIzaSyBGxeOnslbgSvN2JWq8o2tNptSFzSaY8lI';
+
+    function ajaxGet(url, cb) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.onreadystatechange = function() {
+            if(xhr.readyState===4 && xhr.status===200) cb(JSON.parse(xhr.responseText));
+        };
+        xhr.send();
+    }
+
+    function renderFeed(url) {
+        var target = document.getElementById('main-feed');
+        target.innerHTML = '<p style="text-align:center; padding:50px;">読み込み中...</p>';
+        ajaxGet(url, function(data) {
+            var html = '';
+            data.items.forEach(function(v) {
+                var vid = v.id.videoId || v.id;
+                if(typeof vid === 'object') vid = vid.videoId;
+                var snip = v.snippet;
+                html += '<div class="v-card" onclick="openPlayer(\''+vid+'\')">' +
+                        '<div class="thumb-wrap"><img src="'+snip.thumbnails.high.url+'" class="thumb-img"></div>' +
+                        '<div class="v-info">' +
+                        '<div class="ch-icon"><img src="'+snip.thumbnails.default.url+'"></div>' +
+                        '<div class="v-text"><p class="v-title">'+snip.title+'</p>' +
+                        '<p class="v-meta">'+snip.channelTitle+'</p></div></div></div>';
+            });
+            target.innerHTML = html;
+        });
+    }
+
+    function openPlayer(id) {
+        document.getElementById('player-page').style.display = 'block';
+        document.getElementById('yt-iframe-cont').innerHTML = '<iframe src="https://www.youtube.com/embed/'+id+'?autoplay=1&playsinline=1" style="width:100%; aspect-ratio:16/9; border:none;" allowfullscreen></iframe>';
+        
+        ajaxGet('https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id='+id+'&key='+KEY, function(data) {
+            var v = data.items[0];
+            document.getElementById('p-title').innerText = v.snippet.title;
+            document.getElementById('p-views').innerText = parseInt(v.statistics.viewCount).toLocaleString() + " 回視聴";
+            document.getElementById('p-likes').innerText = v.statistics.likeCount || "高評価";
+            document.getElementById('p-ch-name').innerText = v.snippet.channelTitle;
+            document.getElementById('p-description').innerText = v.snippet.description;
+            document.getElementById('p-ch-icon').innerHTML = '<img src="'+v.snippet.thumbnails.default.url+'">';
+        });
+    }
+
+    function doSearch() {
+        var q = prompt("YouTube 検索 (最新UI)");
+        if(q) renderFeed('https://www.googleapis.com/youtube/v3/search?part=snippet&q='+encodeURIComponent(q)+'&type=video&maxResults=10&key='+KEY);
+    }
+
+    function closePlayer() {
+        document.getElementById('player-page').style.display = 'none';
+        document.getElementById('yt-iframe-cont').innerHTML = '';
+    }
+
+    window.onload = function() {
+        renderFeed('https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&chart=mostPopular&regionCode=JP&maxResults=10&key='+KEY);
+    };
+</script>
+</body>
+</html>
